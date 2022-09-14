@@ -36,14 +36,20 @@ defmodule Cluster.Strategy do
   def connect_nodes(topology, {_, _, _} = connect, {_, _, _} = list_nodes, nodes)
       when is_list(nodes) do
     {connect_mod, connect_fun, connect_args} = connect
+    Cluster.Logger.info(topology, "connect_nodes -> connect #{inspect(connect)}")
     {list_mod, list_fun, list_args} = list_nodes
+    Cluster.Logger.info(topology, "connect_nodes -> list_nodes #{inspect(list_nodes)}")
     ensure_exported!(list_mod, list_fun, length(list_args))
     current_node = Node.self()
+
+    Cluster.Logger.info(topology, "connect_nodes -> current_node #{inspect(current_node)}")
 
     need_connect =
       nodes
       |> difference(apply(list_mod, list_fun, list_args))
       |> Enum.reject(fn n -> current_node == n end)
+
+    Cluster.Logger.info(topology, "connect_nodes -> need_connect #{inspect(need_connect)}")
 
     bad_nodes =
       Enum.reduce(need_connect, [], fn n, acc ->
@@ -68,6 +74,8 @@ defmodule Cluster.Strategy do
             [{n, :ignored} | acc]
         end
       end)
+
+    Cluster.Logger.info(topology, "connect_nodes -> bad_nodes #{inspect(bad_nodes)}")
 
     case bad_nodes do
       [] -> :ok

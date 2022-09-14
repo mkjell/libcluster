@@ -58,6 +58,7 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
 
   defp load(%State{topology: topology, meta: meta} = state) do
     info(topology, "load -> meta #{inspect(meta)}")
+    info(topology, "load -> state #{inspect(state)}")
     new_nodelist = MapSet.new(get_nodes(state))
     info(topology, "load -> new_nodelist after get_nodes #{inspect(new_nodelist)}")
     removed = MapSet.difference(meta, new_nodelist)
@@ -95,7 +96,7 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
           new_nodelist
 
         {:error, bad_nodes} ->
-          info(topology, "load -> new_nodelist after connect_nodes #{inspect(new_nodelist)}")
+          info(topology, "load -> connect_nodes bad_nodes #{inspect(new_nodelist)}")
           # Remove the nodes which should have been added, but couldn't be for some reason
           Enum.reduce(bad_nodes, new_nodelist, fn {n, _}, acc ->
             MapSet.delete(acc, n)
