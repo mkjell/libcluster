@@ -57,11 +57,11 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
   end
 
   defp load(%State{topology: topology, meta: meta} = state) do
-    info("load -> meta #{inspect(meta)}")
+    info(topology, "load -> meta #{inspect(meta)}")
     new_nodelist = MapSet.new(get_nodes(state))
-    info("load -> new_nodelist after get_nodes #{inspect(new_nodelist)}")
+    info(topology, "load -> new_nodelist after get_nodes #{inspect(new_nodelist)}")
     removed = MapSet.difference(meta, new_nodelist)
-    info("load -> removed #{inspect(removed)}")
+    info(topology, "load -> removed #{inspect(removed)}")
 
     new_nodelist =
       case Cluster.Strategy.disconnect_nodes(
@@ -74,7 +74,7 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
           new_nodelist
 
         {:error, bad_nodes} ->
-          info("load -> disconnect_nodes bad_nodes #{inspect(bad_nodes)}")
+          info(topology, "load -> disconnect_nodes bad_nodes #{inspect(bad_nodes)}")
 
           # Add back the nodes which should have been removed, but which couldn't be for some reason
           Enum.reduce(bad_nodes, new_nodelist, fn {n, _}, acc ->
@@ -82,7 +82,7 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
           end)
       end
 
-    info("load -> new_nodelist after disconnect_nodes #{inspect(new_nodelist)}")
+    info(topology, "load -> new_nodelist after disconnect_nodes #{inspect(new_nodelist)}")
 
     new_nodelist =
       case Cluster.Strategy.connect_nodes(
@@ -95,14 +95,14 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
           new_nodelist
 
         {:error, bad_nodes} ->
-          info("load -> new_nodelist after connect_nodes #{inspect(new_nodelist)}")
+          info(topology, "load -> new_nodelist after connect_nodes #{inspect(new_nodelist)}")
           # Remove the nodes which should have been added, but couldn't be for some reason
           Enum.reduce(bad_nodes, new_nodelist, fn {n, _}, acc ->
             MapSet.delete(acc, n)
           end)
       end
 
-    info("load -> new_nodelist after connect_nodes #{inspect(new_nodelist)}")
+    info(topology, "load -> new_nodelist after connect_nodes #{inspect(new_nodelist)}")
 
     Process.send_after(
       self(),
@@ -126,7 +126,7 @@ defmodule Cluster.Strategy.Kubernetes.DNS do
         case resolver.(headless_service) do
           {:ok, {:hostent, _fqdn, [], :inet, _value, addresses}} ->
             response = parse_response(addresses, app_name)
-            info("get_nodes -> response #{inspect(response)}")
+            info(topology, "get_nodes -> response #{inspect(response)}")
             response
 
           {:error, reason} ->
