@@ -44,6 +44,10 @@ defmodule Cluster.Strategy do
 
     Cluster.Logger.info(topology, "connect_nodes -> current_node #{inspect(current_node)}")
 
+    connected_nodes = apply(list_mod, list_fun, list_args)
+
+    Cluster.Logger.info(topology, "connect_nodes -> connected_nodes #{inspect(connected_nodes)}")
+
     need_connect =
       nodes
       |> difference(apply(list_mod, list_fun, list_args))
